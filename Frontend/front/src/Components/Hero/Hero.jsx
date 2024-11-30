@@ -2,7 +2,7 @@ import React from 'react'
 import './Hero.css'
 import hand_icon from '../Assets/Frontend_Assets/hand_icon.png'
 import arrow_icon from '../Assets/Frontend_Assets/arrow.png'
-import hero_image from '../Assets/Frontend_Assets/hero_image.png'
+import hero_image from '../Assets/Frontend_Assets/Hero_novo.png'
 
 export const Hero = () => {
   return (
@@ -11,11 +11,11 @@ export const Hero = () => {
             <h2>VOCÊ QUE CHEGOU AGORA</h2>
             <div>
                 <div className="hero-hand-icon">
-                    <p>nova</p>
+                    <p>novas</p>
                     <img src={hand_icon} alt="" />
                 </div>
-                <p>coleção</p>
-                <p>para todos</p>
+                <p>coleções</p>
+                <p>esportivas</p>
             </div>
             <div className="hero-latest-bnt">
                 <div>Ultimas Atualizações</div>

@@ -4,7 +4,7 @@ import { ShopContext } from '../../Context/ShopContext'
 import remove_icon from '../Assets/Frontend_Assets/cart_cross_icon.png'
 
 export const CartItems = () => {
-    const {getTotalCartAmount, all_product, cartItems, removeFromCart} = useContext(ShopContext)
+    const {getTotalCartAmount, all_product, cartItems, removeFromCart, createOrder} = useContext(ShopContext)
   
     return (
     <div className='cartitems'>
@@ -60,7 +60,7 @@ export const CartItems = () => {
                         <h3>R${getTotalCartAmount()}</h3>
                     </div>
                 </div>
-                <button>POSSEGUIR PARA PAGAMENTO</button>
+                <button onClick={() => createOrder()}>EFETUAR PEDIDO</button>
             </div>
             <div className="cartitems-promocode">
                 <p>Se você tem um cupom de desconto, insira aqui</p>

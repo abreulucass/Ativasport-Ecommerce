@@ -39,7 +39,7 @@ export const ListProduct = () => {
         <p>Titulo</p>
         <p>Preço</p>
         <p>Categoria</p>
-        <p>Remove</p>
+        <p>Remover</p>
         <p>Editar</p>
       </div>
       <div className="listproduct-allproduct">

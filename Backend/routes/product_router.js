@@ -1,22 +1,140 @@
-const User = require('../models/user')
-const jwt = require('jsonwebtoken');
+
 const Product = require('../models/product');
+const User = require('../models/user');
+const Favoriteproduct = require('../models/favoriteproduct');
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const router = express.Router();
-const mongoose = require('mongoose');
-const multer = require('multer');
-const fs = require('fs');
-const { error } = require('console');
 
+router.get(`/favorite/:id`, async(req, res) => {
+    const token = req.header('auth-token');
+    const decodedToken = jwt.decode(token, { complete: true });
 
-/*router.get(`/`, async (req, res) => {
-    const produtoList = await Produto.find().select('name image -_id');
+    const id = decodedToken.payload.user.id;
 
-    if(!produtoList){
-        res.status(500).json({success: false})
+    const user = await User.findOne({_id:id});
+    const product = await Product.findOne({id: req.params.id})
+
+    let favProducts = await Favoriteproduct.findOne({user: user._id})
+
+    if(!favProducts){
+        return res.status(200).json({success: false})
+    } else {
+        const resp = await Favoriteproduct.findOne({ 
+            _id: favProducts._id ,
+            products: { $in: [product._id] },
+        })
+    
+        if(!resp){
+            return res.status(200).json({success: false})
+        } else {
+            return res.status(200).json({success: true})
+        }
     }
-    res.send(produtoList)
-})*/
+
+})
+
+router.post(`/favorite/:id`, async(req, res) => {
+    console.log("entrei")
+    const token = req.header('auth-token');
+    const decodedToken = jwt.decode(token, { complete: true });
+
+    const id = decodedToken.payload.user.id;
+
+    const user = await User.findOne({_id:id});
+    const product = await Product.findOne({id: req.params.id})
+
+    let favProducts = await Favoriteproduct.findOne({user: user._id})
+
+    if(favProducts){
+        const newFav = await Favoriteproduct.findOneAndUpdate(
+            { _id: favProducts._id },
+            { $addToSet: { products: product._id } },
+            { returnDocument: "after" }
+        )
+        const newUser = await User.findOneAndUpdate(
+            { _id: user._id },
+            { $addToSet: { favoriteproducts: product._id } },
+            { returnDocument: "after" }
+        )
+        const newProduct = await Product.findOneAndUpdate(
+            { _id: product._id },
+            { $addToSet: { userFavorites: user._id } },
+            { returnDocument: "after" }
+        )
+
+        if(newFav && newProduct && newUser){
+            res.status(200).json({success: true})
+        } else {
+            res.status(500).json({success: false})
+        }
+
+    } else {
+        favProducts = new Favoriteproduct({
+            user: [user._id],
+            products: [product._id],
+        })
+
+        favProducts = await favProducts.save()
+
+        console.log(favProducts)
+
+        const newUser = await User.findOneAndUpdate(
+            { _id: user._id },
+            { $addToSet: { favoriteproducts: product._id } },
+            { returnDocument: "after" }
+        )
+        const newProduct = await Product.findOneAndUpdate(
+            { _id: product._id },
+            { $addToSet: { userFavorites: user._id } },
+            { returnDocument: "after" }
+        )
+
+        if(favProducts && newProduct && newUser){
+            res.status(200).json({success: true})
+        } else {
+            res.status(200).json({success: false})
+        }
+    }
+})
+
+router.delete(`/favorite/:id`, async(req, res) => {
+    console.log("entrei")
+    const token = req.header('auth-token');
+    const decodedToken = jwt.decode(token, { complete: true });
+
+    const id = decodedToken.payload.user.id;
+
+    const user = await User.findOne({_id:id});
+    const product = await Product.findOne({id: req.params.id})
+
+    let favProducts = await Favoriteproduct.findOne({user: user._id})
+
+    if(favProducts){
+        const newFav = await Favoriteproduct.findOneAndUpdate(
+            { _id: favProducts._id },
+            { $pull: { products: product._id } },
+            { returnDocument: "after" }
+        )
+        const newUser = await User.findOneAndUpdate(
+            { _id: user._id },
+            { $pull: { favoriteproducts: product._id } },
+            { returnDocument: "after" }
+        )
+        const newProduct = await Product.findOneAndUpdate(
+            { _id: product._id },
+            { $pull: { userFavorites: user._id } },
+            { returnDocument: "after" }
+        )
+
+        if(newFav && newProduct && newUser){
+            res.status(200).json({success: true})
+        } else {
+            res.status(500).json({success: false})
+        }
+
+    } 
+})
 
 router.get(`/getproducts`, async (req, res) => {
 
@@ -54,15 +172,6 @@ router.get(`/getpopularinwomen`, async(req, res) => {
     res.send(popular_in_womem)
 })
 
-// router.get(`/:id`, async (req, res) => {
-//     const produto = await Produto.findById(req.params.id).populate('category');
-
-//      f(!produto){
-//         res.status(500).json({success: false})
-//     }
-//     res.send(produto)
-//  })
-
 router.post(`/addproduct`, async (req, res) => {
 
     let products = await Product.find({});
@@ -70,7 +179,7 @@ router.post(`/addproduct`, async (req, res) => {
 
     if(products.length > 0){
         let last_product_array = products.slice(-1);
-        let last_product = last_product_array[0]
+        let last_product = last_product_array[0];
         id = last_product.id+1;
     } else {
         id = 1;
@@ -96,52 +205,6 @@ router.post(`/addproduct`, async (req, res) => {
     })
 });
 
-const fetchUser = async (req, res, next) => {
-    const token = req.header('auth-token');
-    console.log(token)
-    if(!token){
-        res.status(401).send({errors: "Por favor, realize o seu Login"})
-    } else {
-        try {
-            const data = jwt.verify(token, process.env.SECRET);
-            req.user = data.user;
-
-            next();
-        } catch (error) {
-            res.status(401).send({errors: "Por favor, realize o seu Login"})
-        }
-    }
-}
-
-router.post('/addtocart', fetchUser, async(req, res) => {
-
-    console.log("Added", req.body.itemId)
-    
-    let userData = await User.findOne({_id:req.user.id});
-    userData.cartData[req.body.itemId] += 1;
-
-    await User.findOneAndUpdate({_id:req.user.id}, {cartData:userData.cartData})
-    res.send({success: true, msg: "Added"})
-})
-
-router.post('/removefromcart', fetchUser, async(req, res) => {
-
-    console.log("removed", req.body.itemId)
-
-    let userData = await User.findOne({_id:req.user.id});
-
-    if(userData.cartData[req.body.itemId]> 0)
-        userData.cartData[req.body.itemId] -= 1;
-
-    await User.findOneAndUpdate({_id:req.user.id}, {cartData:userData.cartData});
-    res.send({success: true, msg: "Removed"})
-})
-
-router.post('/getcart', fetchUser, async (req, res) => {
-    console.log("GetCart");
-    let userData = await User.findOne({_id:req.user.id});
-    res.json(userData.cartData);
-})
 
 router.put('/editproduct/:id', async (req, res) => {
 
@@ -163,42 +226,10 @@ router.put('/editproduct/:id', async (req, res) => {
     })
 });
 
-// router.put('/gallery-images/:id', 
-//     //uploadOptions.array('images', 10), 
-//     async (req, res) => {
-//         if(!mongoose.isValidObjectId(req.params.id)){
-//             res.status(400).send('Id do produto invalido')
-//         }
-        
-//         const files = req.files
-//         let imagesPaths = [];
-//         const basePath = `${req.protocol}://${req.get('host')}/public/uploads/`
-
-//         if(files){
-//             files.map(file => {
-//                 imagesPaths.push(`${basePath}${file.filename}`);
-//             })
-//         }
-        
-
-//         const produto = await Produto.findByIdAndUpdate(
-//             req.params.id,
-//             {
-//                images: imagesPaths
-//             },
-//             { new: true}
-//         )
-
-//         if(!produto){
-//             res.status(500).json({menssage: "O Id que foi passado não corresponde a uma produto"})
-//         }
-//         res.status(200).send(produto);
-// })
 
 router.delete('/removeproduct/:id', async (req, res) => {
     //const product = Product.findOne({id:req.params.id})
     
-
     await Product.findOneAndDelete({id:req.params.id});
     console.log("Removed");
     res.json({
@@ -206,26 +237,5 @@ router.delete('/removeproduct/:id', async (req, res) => {
         name: req.body.name
     })
 })
-
-// router.get(`/get/count`, async (req, res) => {
-//     const produtoCount = await Produto.countDocuments()
-
-//     if(!produtoCount){
-//         res.status(500).json({success: false})
-//     }
-//     res.send({
-//         produtoCount: produtoCount
-//     })
-// })
-
-// router.get(`/get/featured/:count`, async (req, res) => {
-//     const count = req.params.count ? req.params.count : 0
-//     const produtos = await Produto.find({isFeatured: true}).limit(+count)
-
-//     if(!produtos){
-//         res.status(500).json({success: false})
-//     }
-//     res.send(produtos)
-// })
 
 module.exports = router;

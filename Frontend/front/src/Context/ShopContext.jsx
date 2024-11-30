@@ -24,15 +24,15 @@ const ShopContextProvider = (props) => {
 
         if(localStorage.getItem('auth-token')){
             fetch('http://localhost:8000/cart/getcart',{
-                method: 'POST',
+                method: 'GET',
                 headers:{
                     Accept: 'application/form-data',
                     'auth-token': `${localStorage.getItem('auth-token')}`,
                     'Content-Type': 'application/json'
                 },
-                body: "",
             }).then((response) => response.json())
             .then((data) => setCartItems(data))
+            .catch(error => console.error('Erro ao analisar o JSON:', error.message));
         }
     }, [])
 
@@ -61,7 +61,7 @@ const ShopContextProvider = (props) => {
 
         if(localStorage.getItem('auth-token')){
             fetch('http://localhost:8000/cart/removefromcart', {
-                method: 'POST',
+                method: 'DELETE',
                 headers:{
                     Accept: 'application/form-data',
                     'auth-token': `${localStorage.getItem('auth-token')}`,
@@ -71,6 +71,7 @@ const ShopContextProvider = (props) => {
             })
             .then((response) => response.json())
             .then((data) => console.log(data))
+            .catch(error => console.error('Erro ao analisar o JSON:', error.message));
         }
     }
 
@@ -95,7 +96,35 @@ const ShopContextProvider = (props) => {
         return totalItem;
     }
 
-    const contextValue = {getTotalCartItems, getTotalCartAmount, all_product, cartItems, addToCart, removeFromCart};
+    const createOrder = () => {
+        if(localStorage.getItem('auth-token')){
+            fetch('http://localhost:8000/order/createorder', {
+                method: 'POST',
+                headers:{
+                    Accept: 'application/form-data',
+                    'auth-token': `${localStorage.getItem('auth-token')}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({"products": cartItems, "totalPrice": getTotalCartAmount()
+                }),
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                if(data.success === true){
+                    alert("Pedido Efetuado")
+                    setCartItems(getDefaultCart())
+                } else {
+                    alert("Pedido não efetuado")
+                } 
+            })
+            .catch(error => console.error('Erro ao analisar o JSON:', error.message));
+
+           
+        }
+        
+    }
+
+    const contextValue = {getTotalCartItems, getTotalCartAmount, all_product, cartItems, addToCart, removeFromCart, createOrder};
     return(
         <ShopContext.Provider value={contextValue}>
             {props.children}

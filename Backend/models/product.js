@@ -29,6 +29,10 @@ const schemaProduct = mongoose.Schema({
         type: Boolean,
         default: true,
     },
+    userFavorites:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }]
 
 })
 

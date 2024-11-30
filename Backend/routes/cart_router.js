@@ -6,7 +6,7 @@ const router = express.Router();
 
 const fetchUser = async (req, res, next) => {
     const token = req.header('auth-token');
-    console.log(token)
+
     if(!token){
         res.status(401).send({errors: "Por favor, realize o seu Login"})
     } else {
@@ -32,7 +32,7 @@ router.post('/addtocart', fetchUser, async(req, res) => {
     res.send({success: true, msg: "Added"})
 })
 
-router.post('/removefromcart', fetchUser, async(req, res) => {
+router.delete('/removefromcart', fetchUser, async(req, res) => {
 
     console.log("removed", req.body.itemId)
 
@@ -42,10 +42,10 @@ router.post('/removefromcart', fetchUser, async(req, res) => {
         userData.cartData[req.body.itemId] -= 1;
 
     await User.findOneAndUpdate({_id:req.user.id}, {cartData:userData.cartData});
-    res.send({success: true, msg: "Removed"})
+    res.send({success: true})
 })
 
-router.post('/getcart', fetchUser, async (req, res) => {
+router.get('/getcart', fetchUser, async (req, res) => {
     console.log("GetCart");
     let userData = await User.findOne({_id:req.user.id});
     res.json(userData.cartData);

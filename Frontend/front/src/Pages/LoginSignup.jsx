@@ -40,7 +40,7 @@ export const LoginSignup = () => {
   }
 
   const signup = async () => {
-    console.log("Signup carai", formData)
+    console.log("Signup", formData)
 
     let responseData;
 

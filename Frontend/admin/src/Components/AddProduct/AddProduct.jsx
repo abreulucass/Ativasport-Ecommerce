@@ -8,7 +8,7 @@ export const AddProduct = () => {
     const [productDatails, setProductDetails] = useState({
         name: "",
         image: "",
-        category: "feminino",
+        category: "Feminino",
         price: ""
     })
 
@@ -53,6 +53,7 @@ export const AddProduct = () => {
 
   return (
     <div className='add-product'>
+        <h1>Adicionar um Produto</h1>
         <div className="addproduct-itemfield">
             <p>Titulo do Produto</p>
             <input value={productDatails.name} onChange={changeHandler} type="text" name="name" placeholder="Digite aqui" />

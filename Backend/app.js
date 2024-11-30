@@ -4,8 +4,6 @@ const bodyParser = require('body-parser');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const authJwt = require('./helpers/jwt')
-const errorHandler = require('./helpers/error-handler')
 const cookieParser = require('cookie-parser')
 const multer = require('multer');
 const path = require('path')
@@ -19,20 +17,19 @@ app.options('*', cors())
 //middleware
 app.use(cookieParser())
 app.use(bodyParser.json());
+app.use(express.json());
 app.use(morgan('tiny'))
-//app.use(authJwt());
-//app.use(errorHandler);
-
 
 //Routes
 const produtosRoutes = require('./routes/product_router')
 const usuariosRoutes = require('./routes/user_router')
 const carrinhoRoutes = require('./routes/cart_router')
-
+const pedidosRouter = require('./routes/order_router')
 
 app.use(`/product`, produtosRoutes)
 app.use(`/user`, usuariosRoutes)
 app.use(`/cart`, carrinhoRoutes)
+app.use(`/order`, pedidosRouter)
 
 app.use((err, req, res, next) => {
     if (err.name === 'UnauthorizedError') {
@@ -60,8 +57,6 @@ app.post("/upload", upload.single('product'), (req, res) => {
         image_url: `http://localhost:${port}/image/${req.file.filename}`
     })
 })
-
-
 
 // Conectar com o banco de dados
 mongoose.connect(process.env.CONNECTION_STRING)
